@@ -81,8 +81,8 @@ JobParameters: `arrival.id` (identifying), `input.file` and `original.name` (non
 
 ```bash
 ./gradlew bootJar
-docker build -t dcre-sxr:2.1.0 .
-kind load docker-image --name dcre-dev dcre-sxr:2.1.0
+docker build -t dcre-sxr:2.1.1 .
+kind load docker-image --name dcre-dev dcre-sxr:2.1.1
 ```
 
 AGT launches SXR on demand: when a `fint-resp` arrival's filename carries the `_SBSR` token, AGT mints a short-lived k8s Job from the image named in its `AGT_SXR_IMAGE` env, passing the JobParameters as program args and `JOB_NAME` in the env. `scripts/switch-version.sh VERSION` in dcre-infra repoints the whole fleet (`AGT_SXR_IMAGE=dcre-sxr:VERSION`). Release tags are digits-only 3-component SemVer, uniform across the fleet.
