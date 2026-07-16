@@ -17,6 +17,7 @@ import org.testcontainers.utility.DockerImageName;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -65,6 +66,7 @@ class SxrJobTest {
     @Test
     void ingestsReplyFileAndReplayIsNoOp() throws Exception {
         CrwSourceTables.create(jdbc);
+        wipeOutcomes();
         String original = "20260712_FNB_SBSR_reply.xml";
         Path input = dir.resolve(original);
         Files.writeString(input, REPLY);
@@ -75,6 +77,10 @@ class SxrJobTest {
                 .addString("original.name", original, false)
                 .toJobParameters());
         assertEquals(BatchStatus.COMPLETED, run.getStatus());
+        // SCRUM-58: no JOB_NAME env -> self-describing local seam name (shared OutcomeSeamListener)
+        assertEquals(List.of("BUSINESS_ACCEPTED"),
+                Files.readAllLines(Path.of("build/test-exchange", "outcomes", "local-sxr-" + run.getId())),
+                "seam outcome must land at outcomes/local-sxr-<executionId>");
         assertEquals(4, jdbc.queryForObject(
                 "SELECT count(*) FROM sbsr_resp WHERE response_file=?", Integer.class, original));
         assertEquals("RJCT", jdbc.queryForObject(
@@ -97,5 +103,18 @@ class SxrJobTest {
         assertEquals(4, jdbc.queryForObject(
                 "SELECT count(*) FROM sbsr_resp WHERE response_file=?", Integer.class, original),
                 "replay is a no-op via ON CONFLICT (response_file, e2e)");
+    }
+
+    /** Stale seam files from earlier runs must not satisfy this run's assertion. */
+    private static void wipeOutcomes() throws Exception {
+        Path outcomes = Path.of("build/test-exchange", "outcomes");
+        if (!Files.isDirectory(outcomes)) {
+            return;
+        }
+        try (var files = Files.list(outcomes)) {
+            for (Path file : files.toList()) {
+                Files.delete(file);
+            }
+        }
     }
 }

@@ -1,10 +1,7 @@
 package za.co.fnb.dcre.sxr.config;
 
-import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.job.Job;
-import org.springframework.batch.core.job.JobExecution;
 import org.springframework.batch.core.job.builder.JobBuilder;
-import org.springframework.batch.core.listener.JobExecutionListener;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.Step;
 import org.springframework.batch.core.step.builder.StepBuilder;
@@ -16,11 +13,10 @@ import org.springframework.core.annotation.Order;
 import org.springframework.transaction.PlatformTransactionManager;
 import za.co.fnb.dcre.sxr.service.ReaderTasklet;
 import za.co.fnb.dcre.platform.batch.CrdbRetryExceptionHandler;
-import za.co.fnb.dcre.platform.batch.OutcomeFileWriter;
+import za.co.fnb.dcre.platform.batch.OutcomeSeamListener;
 import za.co.fnb.dcre.platform.batch.StaleExecutionSweeper;
 
 import javax.sql.DataSource;
-import java.nio.file.Path;
 
 @Configuration
 public class SxrJobConfig {
@@ -36,8 +32,11 @@ public class SxrJobConfig {
         // ReaderService, so a step-level re-run no-ops over committed slices.
         Step readerStep = new StepBuilder("readerStep", repo).tasklet(tasklet, tx)
                 .exceptionHandler(new CrdbRetryExceptionHandler("SXR")).build();
+        // SCRUM-58: shared seam listener (platform-batch) replaces the inline
+        // record; COMPLETED gate unchanged, verdict stays the constant
+        // BUSINESS_ACCEPTED, local fallback becomes local-sxr-<executionId>.
         return new JobBuilder("sxrJob", repo)
-                .listener(new SeamListener(exchangeRoot))
+                .listener(new OutcomeSeamListener("sxr", exchangeRoot, execution -> "BUSINESS_ACCEPTED"))
                 .start(readerStep)
                 .build();
     }
@@ -46,17 +45,5 @@ public class SxrJobConfig {
     @Order(-10)
     public ApplicationRunner staleExecutionSweep(DataSource dataSource) {
         return args -> StaleExecutionSweeper.abandonStale(dataSource, "SXR_BATCH_", 60);
-    }
-
-    record SeamListener(String exchangeRoot) implements JobExecutionListener {
-
-        @Override
-        public void afterJob(JobExecution execution) {
-            if (execution.getStatus() != BatchStatus.COMPLETED) {
-                return;
-            }
-            String jobName = System.getenv().getOrDefault("JOB_NAME", "local-" + execution.getId());
-            OutcomeFileWriter.write(Path.of(exchangeRoot), jobName, "BUSINESS_ACCEPTED");
-        }
     }
 }
