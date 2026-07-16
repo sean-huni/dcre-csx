@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- SCRUM-55: correlate each SBSR verdict to the emission batch resolved from
+         OrgnlMsgId (crw_emission.outbound_msg_id, CRW-owned). NULL when the batch
+         is unknown: ingest is fail-open, correlation fail-closed. -->
+    <changeSet id="003-sbsr-emission-fk" author="dcre">
+        <preConditions onFail="MARK_RAN">
+            <not><columnExists tableName="sbsr_resp" columnName="emission_id"/></not>
+        </preConditions>
+        <addColumn tableName="sbsr_resp">
+            <column name="emission_id" type="UUID"/>
+        </addColumn>
+        <createIndex tableName="sbsr_resp" indexName="ix_sbsr_emission">
+            <column name="emission_id"/>
+        </createIndex>
+        <rollback>
+            <dropIndex tableName="sbsr_resp" indexName="ix_sbsr_emission"/>
+            <dropColumn tableName="sbsr_resp" columnName="emission_id"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
