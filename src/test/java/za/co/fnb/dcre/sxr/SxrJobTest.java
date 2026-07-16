@@ -64,6 +64,7 @@ class SxrJobTest {
 
     @Test
     void ingestsReplyFileAndReplayIsNoOp() throws Exception {
+        CrwSourceTables.create(jdbc);
         String original = "20260712_FNB_SBSR_reply.xml";
         Path input = dir.resolve(original);
         Files.writeString(input, REPLY);
