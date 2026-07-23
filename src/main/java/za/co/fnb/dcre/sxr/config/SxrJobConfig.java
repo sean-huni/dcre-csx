@@ -13,6 +13,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.transaction.PlatformTransactionManager;
 import za.co.fnb.dcre.sxr.service.ReaderTasklet;
 import za.co.fnb.dcre.platform.batch.CrdbRetryExceptionHandler;
+import za.co.fnb.dcre.platform.batch.HeartbeatWriter;
 import za.co.fnb.dcre.platform.batch.OutcomeSeamListener;
 import za.co.fnb.dcre.platform.batch.StaleExecutionSweeper;
 
@@ -23,6 +24,7 @@ public class SxrJobConfig {
 
     @Bean
     public Job sxrJob(JobRepository repo, PlatformTransactionManager tx, ReaderTasklet tasklet,
+                      HeartbeatWriter heartbeatWriter,
                       @Value("${dcre.exchange-root}") String exchangeRoot) {
         // CRDB 40001 retry on the ingest step (the one that WRITES): reply-file
         // upserts run while heavy writers run concurrently, so commit-time
@@ -35,8 +37,12 @@ public class SxrJobConfig {
         // SCRUM-58: shared seam listener (platform-batch) replaces the inline
         // record; COMPLETED gate unchanged, verdict stays the constant
         // BUSINESS_ACCEPTED, local fallback becomes local-sxr-<executionId>.
+        // SCRUM-88 (M12): register the HeartbeatWriter listener explicitly (Batch 6 does not
+        // auto-apply listener beans) so it stamps agt_ops liveness while this job runs, chained
+        // after the outcome seam listener.
         return new JobBuilder("sxrJob", repo)
                 .listener(new OutcomeSeamListener("sxr", exchangeRoot, execution -> "BUSINESS_ACCEPTED"))
+                .listener(heartbeatWriter)
                 .start(readerStep)
                 .build();
     }
