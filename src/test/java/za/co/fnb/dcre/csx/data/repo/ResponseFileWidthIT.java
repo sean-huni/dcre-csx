@@ -14,10 +14,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
- * SCRUM-58 (spec 1.4): response_file VARCHAR(128) to VARCHAR(512) so a 129+
- * char reply name no longer crashes the reader insert mid-flow; matches
- * file_arrival.physical_filename(512). The replay-guard
- * UNIQUE (response_file, e2e) from 001-csx.xml must survive the widening.
+ * SCRUM-58 (spec 1.4): response_file is VARCHAR(512) so a 129+ char reply name
+ * does not crash the reader insert after agt_ops has already registered the
+ * arrival; matches file_arrival.physical_filename(512). The v1 baseline declares
+ * that width in the createTable, so this guards the BASELINE width rather than a
+ * widening step, alongside the replay-guard UNIQUE (response_file, e2e).
  */
 @SpringBootTest(properties = {"spring.batch.job.enabled=false", "dcre.exchange-root=build/test-exchange"})
 class ResponseFileWidthIT {
@@ -36,7 +37,7 @@ class ResponseFileWidthIT {
         registry.add("spring.datasource.password", CRDB::getPassword);
     }
 
-    /** 200 chars, realistic reply-name shape (fails on the pre-widening VARCHAR(128)). */
+    /** 200 chars, realistic reply-name shape (would fail on a VARCHAR(128) column). */
     static final String LONG_NAME = "20260716_FNB_SBSR_%s_RESP.xml"
             .formatted("x".repeat(200 - "20260716_FNB_SBSR__RESP.xml".length()));
 
@@ -58,7 +59,7 @@ class ResponseFileWidthIT {
     }
 
     @Test
-    void replayGuardUniqueSurvivesWidening() {
+    void replayGuardUniqueEnforcedAtBaselineWidth() {
         repo.upsert(LONG_NAME, "MSG-0201", null, "E2E-201", "ACSC", null);
         repo.upsert(LONG_NAME, "MSG-0201", null, "E2E-201", "RJCT", "AC04");
 
@@ -69,6 +70,6 @@ class ResponseFileWidthIT {
         assertThrows(DuplicateKeyException.class, () -> jdbc.update(
                         "INSERT INTO sbsr_resp (id, response_file, orgnl_msg_id, e2e, status)"
                                 + " VALUES (gen_random_uuid(), ?, 'MSG-0201', 'E2E-201', 'ACSC')", LONG_NAME),
-                "UNIQUE (response_file, e2e) from 001-csx.xml still enforced after widening");
+                "UNIQUE (response_file, e2e) from the v1 baseline still rejects a raw duplicate");
     }
 }
