@@ -1,4 +1,4 @@
-package za.co.fnb.dcre.sxr.service;
+package za.co.fnb.dcre.csx.service;
 
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -14,7 +14,7 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.CockroachContainer;
 import org.testcontainers.utility.DockerImageName;
-import za.co.fnb.dcre.sxr.CrwSourceTables;
+import za.co.fnb.dcre.csx.CrwSourceTables;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -86,8 +86,8 @@ class BatchCorrelationIT {
         assertEquals(0, jdbc.queryForObject("SELECT count(*) FROM sbsr_resp WHERE response_file=?"
                         + " AND e2e='E2E-Z'", Integer.class, responseFile),
                 "foreign e2e is NEVER ingested (fail-closed correlation)");
-        assertTrue(warnLogged("reason=FOREIGN_E2E", "e2e=E2E-Z", "stage=SXR"),
-                "skip must be visible: WARN excluded stage=SXR ... e2e=E2E-Z reason=FOREIGN_E2E");
+        assertTrue(warnLogged("reason=FOREIGN_E2E", "e2e=E2E-Z", "stage=CSX"),
+                "skip must be visible: WARN excluded stage=CSX ... e2e=E2E-Z reason=FOREIGN_E2E");
     }
 
     @Test

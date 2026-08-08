@@ -1,4 +1,4 @@
-package za.co.fnb.dcre.sxr;
+package za.co.fnb.dcre.csx;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 @SpringBootTest(properties = {"spring.batch.job.enabled=false", "dcre.exchange-root=build/test-exchange"})
-class SxrJobTest {
+class CsxJobTest {
 
     static final CockroachContainer CRDB =
             new CockroachContainer(DockerImageName.parse("cockroachdb/cockroach:v26.2.3"));
@@ -44,7 +44,7 @@ class SxrJobTest {
     static Path dir;
 
     @Autowired
-    Job sxrJob;
+    Job csxJob;
 
     @Autowired
     JobOperator jobOperator;
@@ -71,7 +71,7 @@ class SxrJobTest {
         Path input = dir.resolve(original);
         Files.writeString(input, REPLY);
 
-        JobExecution run = jobOperator.start(sxrJob, new JobParametersBuilder()
+        JobExecution run = jobOperator.start(csxJob, new JobParametersBuilder()
                 .addString("arrival.id", UUID.randomUUID().toString(), true)
                 .addString("input.file", input.toString(), false)
                 .addString("original.name", original, false)
@@ -79,8 +79,8 @@ class SxrJobTest {
         assertEquals(BatchStatus.COMPLETED, run.getStatus());
         // SCRUM-58: no JOB_NAME env -> self-describing local seam name (shared OutcomeSeamListener)
         assertEquals(List.of("BUSINESS_ACCEPTED"),
-                Files.readAllLines(Path.of("build/test-exchange", "outcomes", "local-sxr-" + run.getId())),
-                "seam outcome must land at outcomes/local-sxr-<executionId>");
+                Files.readAllLines(Path.of("build/test-exchange", "outcomes", "local-csx-" + run.getId())),
+                "seam outcome must land at outcomes/local-csx-<executionId>");
         assertEquals(4, jdbc.queryForObject(
                 "SELECT count(*) FROM sbsr_resp WHERE response_file=?", Integer.class, original));
         assertEquals("RJCT", jdbc.queryForObject(
@@ -94,7 +94,7 @@ class SxrJobTest {
         assertEquals("MSG-0001", jdbc.queryForObject(
                 "SELECT orgnl_msg_id FROM sbsr_resp WHERE response_file=? AND e2e='E2E-1'", String.class, original));
 
-        JobExecution replay = jobOperator.start(sxrJob, new JobParametersBuilder()
+        JobExecution replay = jobOperator.start(csxJob, new JobParametersBuilder()
                 .addString("arrival.id", UUID.randomUUID().toString(), true)
                 .addString("input.file", input.toString(), false)
                 .addString("original.name", original, false)

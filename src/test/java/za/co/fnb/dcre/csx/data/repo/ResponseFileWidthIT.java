@@ -1,4 +1,4 @@
-package za.co.fnb.dcre.sxr.data.repo;
+package za.co.fnb.dcre.csx.data.repo;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * SCRUM-58 (spec 1.4): response_file VARCHAR(128) to VARCHAR(512) so a 129+
  * char reply name no longer crashes the reader insert mid-flow; matches
  * file_arrival.physical_filename(512). The replay-guard
- * UNIQUE (response_file, e2e) from 001-sxr.xml must survive the widening.
+ * UNIQUE (response_file, e2e) from 001-csx.xml must survive the widening.
  */
 @SpringBootTest(properties = {"spring.batch.job.enabled=false", "dcre.exchange-root=build/test-exchange"})
 class ResponseFileWidthIT {
@@ -69,6 +69,6 @@ class ResponseFileWidthIT {
         assertThrows(DuplicateKeyException.class, () -> jdbc.update(
                         "INSERT INTO sbsr_resp (id, response_file, orgnl_msg_id, e2e, status)"
                                 + " VALUES (gen_random_uuid(), ?, 'MSG-0201', 'E2E-201', 'ACSC')", LONG_NAME),
-                "UNIQUE (response_file, e2e) from 001-sxr.xml still enforced after widening");
+                "UNIQUE (response_file, e2e) from 001-csx.xml still enforced after widening");
     }
 }
