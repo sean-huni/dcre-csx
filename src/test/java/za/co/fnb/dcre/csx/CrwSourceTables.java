@@ -1,10 +1,10 @@
-package za.co.fnb.dcre.sxr;
+package za.co.fnb.dcre.csx;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
  * Test bootstrap for the CRW-owned source tables the reader correlates against.
- * SXR does NOT own this DDL (crw 001-crw.xml + 003-split.xml do; shared DB in
+ * CSX does NOT own this DDL (crw 001-crw.xml + 003-split.xml do; shared DB in
  * production), so integration tests create the same column shapes via plain
  * JDBC, the same pattern PRG uses for its bootstrap sources. Idempotent via
  * IF NOT EXISTS; never added to this service's changelog.

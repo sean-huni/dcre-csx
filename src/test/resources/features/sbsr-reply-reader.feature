@@ -1,6 +1,6 @@
-@sxr
+@csx
 Feature: SBSR reply file ingestion
-  The SXR reader picks up incoming _SBSR reply files from the exchange and stores
+  The CSX reader picks up incoming _SBSR reply files from the exchange and stores
   one verdict row per transaction block, so downstream collections processing can
   react to each end-to-end payment outcome individually (fan-out per R-17).
   Replaying the same reply file must never duplicate verdicts.

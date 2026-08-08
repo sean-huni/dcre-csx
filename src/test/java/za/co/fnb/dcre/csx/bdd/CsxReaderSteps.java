@@ -1,4 +1,4 @@
-package za.co.fnb.dcre.sxr.bdd;
+package za.co.fnb.dcre.csx.bdd;
 
 import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
@@ -11,7 +11,7 @@ import org.springframework.batch.core.job.parameters.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
-import za.co.fnb.dcre.sxr.CrwSourceTables;
+import za.co.fnb.dcre.csx.CrwSourceTables;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -29,10 +29,10 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  * [SYNTHETIC-CONTRACT R-35] reply shape: one OrgnlMsgId element, then repeated
  * Tx blocks of OrgnlEndToEndId + TxSts with an optional Rsn.
  */
-public class SxrReaderSteps {
+public class CsxReaderSteps {
 
     @Autowired
-    Job sxrJob;
+    Job csxJob;
 
     @Autowired
     JobOperator jobOperator;
@@ -131,9 +131,9 @@ public class SxrReaderSteps {
     }
 
     private void runJob() throws Exception {
-        Path input = Files.createTempDirectory("sxr-bdd").resolve(responseFile);
+        Path input = Files.createTempDirectory("csx-bdd").resolve(responseFile);
         Files.writeString(input, buildReply());
-        lastRun = jobOperator.start(sxrJob, new JobParametersBuilder()
+        lastRun = jobOperator.start(csxJob, new JobParametersBuilder()
                 .addString("arrival.id", UUID.randomUUID().toString(), true)
                 .addString("input.file", input.toString(), false)
                 .addString("original.name", responseFile, false)

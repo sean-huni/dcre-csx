@@ -1,4 +1,4 @@
-package za.co.fnb.dcre.sxr.service;
+package za.co.fnb.dcre.csx.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
-import za.co.fnb.dcre.sxr.data.repo.SbsrRespRepo;
+import za.co.fnb.dcre.csx.data.repo.SbsrRespRepo;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -61,7 +61,7 @@ public class ReaderService {
     private final int sliceSize;
 
     public ReaderService(final SbsrRespRepo repo, final PlatformTransactionManager txManager,
-                         @Value("${dcre.sxr.ingest-slice-size:10000}") final int sliceSize) {
+                         @Value("${dcre.csx.ingest-slice-size:10000}") final int sliceSize) {
         this.repo = repo;
         // Each slice commits in its OWN transaction so a 300k-row reply
         // ratchets progress slice by slice; and a CRDB 40001 abort poisons the
@@ -81,7 +81,7 @@ public class ReaderService {
         String orgnlMsgId = msgId.group(1);
         Optional<UUID> emissionId = repo.findEmissionIdByOutboundMsgId(orgnlMsgId);
         if (emissionId.isEmpty()) {
-            log.warn("excluded stage=SXR arrival=- seq=-1 e2e=- reason=UNKNOWN_OUTBOUND_MSG"
+            log.warn("excluded stage=CSX arrival=- seq=-1 e2e=- reason=UNKNOWN_OUTBOUND_MSG"
                     + " orgnlMsgId={} file={}", orgnlMsgId, responseFile);
         }
         Set<String> memberE2e = emissionId.map(repo::findMemberE2e).map(HashSet::new).orElse(null);
@@ -113,7 +113,7 @@ public class ReaderService {
                     int ingested = 0;
                     for (final Verdict verdict : slice) {
                         if (memberE2e != null && !memberE2e.contains(verdict.e2e())) {
-                            log.warn("excluded stage=SXR arrival=- seq=-1 e2e={}"
+                            log.warn("excluded stage=CSX arrival=- seq=-1 e2e={}"
                                     + " reason=FOREIGN_E2E file={}", verdict.e2e(), responseFile);
                             continue;
                         }

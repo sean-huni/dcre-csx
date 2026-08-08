@@ -1,4 +1,4 @@
-package za.co.fnb.dcre.sxr;
+package za.co.fnb.dcre.csx;
 
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Import;
@@ -9,9 +9,9 @@ import za.co.fnb.dcre.platform.persistence.JdbcConfig;
 
 @SpringBootApplication
 @Import({JdbcConfig.class, BatchJdbcConfig.class, HeartbeatDatasourceConfig.class})
-public class SxrApplication {
+public class CsxApplication {
 
     public static void main(String[] args) {
-        ExitCodeMain.run(SxrApplication.class, args);
+        ExitCodeMain.run(CsxApplication.class, args);
     }
 }
