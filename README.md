@@ -4,7 +4,7 @@ SBSR response reader: a short-lived Spring Batch job that ingests Fintegrate SBS
 
 ## What it does
 
-CSX is the SBSR leg of the DCRE response flow (`IXR | CSX | PXR -> ext_tx_status -> PRG`). When Fintegrate drops a reply file on the `fint-resp` exchange route, dcre-agt selects the reader by the filename reply-type token and launches CSX as a short-lived Kubernetes Job for `_SBSR` files (unknown tokens quarantine fail-closed). CSX parses the reply (one `<OrgnlMsgId>`, repeated `<Tx>` blocks of `<OrgnlEndToEndId>` + `<TxSts>` + optional `<Rsn>`, the [SYNTHETIC-CONTRACT R-35] shape) and upserts one `sbsr_resp` row per Tx block. PRG's `ext_tx_status` view consolidates those verdicts with stage-rank precedence PBSR > SBSR > ISR > CTV; SBSR carries the interim per-transaction statuses.
+CSX is the SBSR leg of the DCRE response flow (`CIX | CSX | CPX -> ext_tx_status -> CRG`). When Fintegrate drops a reply file on the `fint-resp` exchange route, dcre-agt selects the reader by the filename reply-type token and launches CSX as a short-lived Kubernetes Job for `_SBSR` files (unknown tokens quarantine fail-closed). CSX parses the reply (one `<OrgnlMsgId>`, repeated `<Tx>` blocks of `<OrgnlEndToEndId>` + `<TxSts>` + optional `<Rsn>`, the [SYNTHETIC-CONTRACT R-35] shape) and upserts one `sbsr_resp` row per Tx block. CRG's `ext_tx_status` view consolidates those verdicts with stage-rank precedence PBSR > SBSR > ISR > CTV; SBSR carries the interim per-transaction statuses.
 
 Stack: Java 25, Spring Boot 4.1.0, Spring Batch 6, Spring Data JDBC, Liquibase, CockroachDB via the PostgreSQL driver.
 
