@@ -49,6 +49,10 @@
          ============================================================================ -->
 
     <changeSet id="csx-v1-sbsr-resp" author="dcre">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="sbsr_resp"/></not>
+        </preConditions>
+        
         <createTable tableName="sbsr_resp">
             <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
                 <constraints primaryKey="true" nullable="false"/>
